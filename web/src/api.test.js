@@ -43,4 +43,22 @@ describe("generateMarketingDrafts", () => {
       "Service unavailable (HTTP 503)",
     );
   });
+
+  it("wraps catalog and reader context for the engagement API shape", async () => {
+    const catalog = [{ book_id: "RB-001" }];
+    const readerContext = { reader_id: "reader-7", favorite_genres: ["Mystery"] };
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: vi.fn().mockResolvedValue({ engagement_messages: [] }),
+    });
+    vi.stubEnv("VITE_API_BASE_URL", "https://api.example.test");
+    vi.stubGlobal("fetch", fetchMock);
+
+    await generateMarketingDrafts(catalog, readerContext);
+
+    expect(fetchMock.mock.calls[0][1].body).toBe(
+      JSON.stringify({ catalog, reader_context: readerContext }),
+    );
+  });
 });

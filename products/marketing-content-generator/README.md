@@ -12,6 +12,7 @@ Create reviewable marketing drafts from structured book and campaign information
 - Social post variations for a campaign.
 - Email copy for a curated recommendation or promotion.
 - Short product-description drafts based on approved book details.
+- Reader-engagement messages based on optional reader and community context.
 
 ## Product requirements to validate
 
@@ -23,3 +24,9 @@ Create reviewable marketing drafts from structured book and campaign information
 ## Definition of a useful first slice
 
 A bookstore team member can provide a small set of approved inputs, generate a draft for one channel, edit it, and understand which details came from the source material.
+
+The current engagement MVP preserves that catalog-only workflow and additionally
+accepts `reader_context` with fields such as `reader_id`, `favorite_genres`,
+`books_read`, `active_challenge`, `challenge_progress`, and `last_visit`. It
+selects a structured next-best message for challenge completion, exploration,
+discovery, comeback, or community progress.

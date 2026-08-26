@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import os
-from typing import Any
+from typing import Any, Union
 
 from fastapi import Body, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from .data import DataContractError
+from .data import DataContractError, DataLoadError
+from .engagement import ReaderContextError
 from .orchestration import run_catalog_generation
 
 
@@ -42,15 +43,40 @@ def health() -> dict[str, str]:
 
 @app.post("/generate")
 def generate(
-    catalog: list[dict[str, Any]] = Body(
+    payload: Union[list[dict[str, Any]], dict[str, Any]] = Body(
         ...,
-        description="A JSON array of Riverside Books catalog records",
+        description=(
+            "A JSON array of catalog records, or an object with catalog and "
+            "optional reader_context"
+        ),
     ),
 ) -> dict[str, Any]:
-    """Run the existing validation-to-generation workflow for a JSON catalog."""
+    """Run legacy catalog generation and optional reader engagement selection."""
+
+    reader_context = None
+    if isinstance(payload, list):
+        catalog = payload
+    else:
+        catalog = payload.get("catalog")
+        reader_context = payload.get("reader_context")
+        if not isinstance(catalog, list) or not all(
+            isinstance(record, dict) for record in catalog
+        ):
+            raise HTTPException(
+                status_code=422,
+                detail="Request object must contain a catalog array of book records",
+            )
+        if reader_context is not None and not isinstance(reader_context, dict):
+            raise HTTPException(
+                status_code=422,
+                detail="reader_context must be an object when provided",
+            )
 
     try:
-        return run_catalog_generation(catalog).as_dict()
+        return run_catalog_generation(
+            catalog,
+            reader_context=reader_context,
+        ).as_dict()
     except DataContractError as exc:
         # A missing or unreadable server-side contract is not a client data
         # rejection and should not expose an internal traceback.
@@ -58,3 +84,11 @@ def generate(
             status_code=500,
             detail="Product D data contract is unavailable",
         ) from exc
+    except (DataLoadError, ReaderContextError) as exc:
+        detail = str(exc)
+        if isinstance(exc, ReaderContextError):
+            detail = [
+                {"path": issue.path, "message": issue.message}
+                for issue in exc.errors
+            ]
+        raise HTTPException(status_code=422, detail=detail) from exc

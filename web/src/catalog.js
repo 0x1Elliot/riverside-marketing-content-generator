@@ -25,6 +25,15 @@ export const SAMPLE_CATALOG = [
   },
 ];
 
+export const SAMPLE_READER_CONTEXT = {
+  reader_id: "reader-7",
+  favorite_genres: ["Science Fiction"],
+  books_read: ["RB-001"],
+  active_challenge: "Riverside Discovery Trail",
+  challenge_progress: 65,
+  last_visit: "2026-08-01",
+};
+
 export function formatCatalog(records) {
   return JSON.stringify(records, null, 2);
 }
@@ -43,6 +52,29 @@ export function parseCatalogText(text) {
 
   if (!Array.isArray(parsed)) {
     throw new Error("Catalog JSON must be a top-level array of book records.");
+  }
+
+  return parsed;
+}
+
+export function formatReaderContext(context) {
+  return JSON.stringify(context, null, 2);
+}
+
+export function parseReaderContextText(text) {
+  if (!text.trim()) {
+    return null;
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error("Reader context is not valid JSON. Check commas and brackets.");
+  }
+
+  if (!parsed || Array.isArray(parsed) || typeof parsed !== "object") {
+    throw new Error("Reader context JSON must be a top-level object.");
   }
 
   return parsed;

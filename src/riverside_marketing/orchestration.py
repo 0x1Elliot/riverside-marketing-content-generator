@@ -18,6 +18,12 @@ from .generation import (
     MarketingDraft,
     generate_marketing_draft,
 )
+from .engagement import (
+    EngagementMessage,
+    ReaderContext,
+    select_engagement_message,
+    validate_reader_context,
+)
 
 
 @dataclass(frozen=True)
@@ -75,6 +81,7 @@ class CatalogGenerationResult:
     """Structured result of validating a catalog and generating its drafts."""
 
     generated_drafts: tuple[MarketingDraft, ...]
+    engagement_messages: tuple[EngagementMessage, ...]
     rejected_records: tuple[RejectedRecord, ...]
     validation_diagnostics: tuple[ValidationDiagnostic, ...]
     summary: OrchestrationSummary
@@ -92,6 +99,9 @@ class CatalogGenerationResult:
             "generated_drafts": [
                 draft.as_dict() for draft in self.generated_drafts
             ],
+            "engagement_messages": [
+                message.as_dict() for message in self.engagement_messages
+            ],
             "rejected_records": [
                 record.as_dict() for record in self.rejected_records
             ],
@@ -107,6 +117,7 @@ def run_catalog_generation(
     records: Sequence[Any],
     content_type: ContentType | str = ContentType.PROMOTIONAL_DESCRIPTION,
     validator: BookDataValidator | None = None,
+    reader_context: Mapping[str, Any] | ReaderContext | None = None,
 ) -> CatalogGenerationResult:
     """Validate records and generate drafts only for valid entries.
 
@@ -119,7 +130,14 @@ def run_catalog_generation(
         raise DataLoadError("Expected a sequence of book records")
 
     active_validator = validator or BookDataValidator()
+    if isinstance(reader_context, ReaderContext):
+        context = reader_context
+    elif reader_context is None:
+        context = None
+    else:
+        context = validate_reader_context(reader_context)
     generated_drafts: list[MarketingDraft] = []
+    valid_books: list[dict[str, Any]] = []
     rejected_records: list[RejectedRecord] = []
     validation_diagnostics: list[ValidationDiagnostic] = []
 
@@ -140,11 +158,18 @@ def run_catalog_generation(
             continue
 
         # The validator guarantees a record is present when valid is true.
+        valid_books.append(validation_result.record)  # type: ignore[arg-type]
         generated_drafts.append(
             generate_marketing_draft(
                 validation_result.record,  # type: ignore[arg-type]
                 content_type=content_type,
             )
+        )
+
+    engagement_messages: tuple[EngagementMessage, ...] = ()
+    if context is not None:
+        engagement_messages = (
+            select_engagement_message(tuple(valid_books), context),
         )
 
     summary = OrchestrationSummary(
@@ -155,6 +180,7 @@ def run_catalog_generation(
     )
     return CatalogGenerationResult(
         generated_drafts=tuple(generated_drafts),
+        engagement_messages=engagement_messages,
         rejected_records=tuple(rejected_records),
         validation_diagnostics=tuple(validation_diagnostics),
         summary=summary,
@@ -165,6 +191,7 @@ def load_and_generate_catalog(
     path: str | Path,
     content_type: ContentType | str = ContentType.PROMOTIONAL_DESCRIPTION,
     validator: BookDataValidator | None = None,
+    reader_context: Mapping[str, Any] | ReaderContext | None = None,
 ) -> CatalogGenerationResult:
     """Load a JSON catalog and run the validation-to-generation workflow."""
 
@@ -173,6 +200,7 @@ def load_and_generate_catalog(
         records,
         content_type=content_type,
         validator=validator,
+        reader_context=reader_context,
     )
 
 

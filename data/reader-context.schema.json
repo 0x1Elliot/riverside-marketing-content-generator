@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://riverside.example/schemas/reader-context.json",
+  "title": "Riverside Books reader context",
+  "description": "Optional reader and community signals used by Product D engagement selection.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "reader_id": { "type": "string", "minLength": 1 },
+    "favorite_genres": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "books_read": {
+      "type": "array",
+      "description": "Book IDs already read by the reader.",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "active_challenge": { "type": "string", "minLength": 1 },
+    "challenge_progress": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Challenge completion percentage from 0 to 100."
+    },
+    "last_visit": {
+      "type": "string",
+      "description": "ISO date or datetime used to identify a 30-day comeback window."
+    },
+    "community_progress": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Shared reading goal completion percentage from 0 to 100."
+    },
+    "community_goal": { "type": "string", "minLength": 1 }
+  }
+}

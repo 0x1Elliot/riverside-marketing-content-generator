@@ -193,6 +193,23 @@ class CatalogOrchestrationTests(unittest.TestCase):
         )
         self.assertEqual(result.summary.generated_drafts, 2)
 
+    def test_reader_context_adds_one_engagement_message_without_changing_core_drafts(self) -> None:
+        result = run_catalog_generation(
+            _valid_records(),
+            reader_context={
+                "reader_id": "reader-7",
+                "favorite_genres": ["Science Fiction"],
+            },
+        )
+
+        self.assertEqual(len(result.generated_drafts), 2)
+        self.assertEqual(len(result.engagement_messages), 1)
+        self.assertEqual(
+            result.engagement_messages[0].message_type,
+            "personalized_discovery",
+        )
+        self.assertIn("engagement_messages", result.as_dict())
+
 
 if __name__ == "__main__":
     unittest.main()

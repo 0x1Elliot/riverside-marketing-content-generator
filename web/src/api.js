@@ -3,7 +3,7 @@ export function getApiBaseUrl() {
   return configuredBaseUrl ? configuredBaseUrl.replace(/\/$/, "") : "";
 }
 
-export async function generateMarketingDrafts(catalog) {
+export async function generateMarketingDrafts(catalog, readerContext = null) {
   const apiBaseUrl = getApiBaseUrl();
   if (!apiBaseUrl) {
     throw new Error("The marketing service URL is not configured for this deployment.");
@@ -12,7 +12,9 @@ export async function generateMarketingDrafts(catalog) {
   const response = await fetch(`${apiBaseUrl}/generate`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify(catalog),
+    body: JSON.stringify(
+      readerContext ? { catalog, reader_context: readerContext } : catalog,
+    ),
   });
 
   let payload;

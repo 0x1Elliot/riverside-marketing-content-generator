@@ -127,6 +127,45 @@ class ProductDAPIv01Tests(unittest.TestCase):
         self.assertEqual(second.status_code, 200)
         self.assertEqual(first.content, second.content)
 
+    def test_reader_context_request_returns_structured_engagement_message(self) -> None:
+        response = self.client.post(
+            "/generate",
+            json={
+                "catalog": _load_json(SAMPLE_PATH),
+                "reader_context": {
+                    "reader_id": "reader-7",
+                    "favorite_genres": ["Science Fiction"],
+                },
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        self.assertEqual(len(result["engagement_messages"]), 1)
+        message = result["engagement_messages"][0]
+        self.assertEqual(message["message_type"], "personalized_discovery")
+        self.assertEqual(message["reader_or_segment"], "reader-7")
+        self.assertEqual(message["recommended_book"]["book_id"], "RB-002")
+        for field in (
+            "reason_selected",
+            "headline",
+            "body_copy",
+            "call_to_action",
+        ):
+            self.assertTrue(message[field])
+
+    def test_invalid_reader_context_is_a_client_error(self) -> None:
+        response = self.client.post(
+            "/generate",
+            json={
+                "catalog": _load_json(SAMPLE_PATH),
+                "reader_context": {"challenge_progress": 120},
+            },
+        )
+
+        self.assertEqual(response.status_code, 422)
+        self.assertIn("challenge_progress", response.text)
+
 
 if __name__ == "__main__":
     unittest.main()

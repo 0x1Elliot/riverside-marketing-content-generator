@@ -8,7 +8,7 @@ The Riverside Books Marketing Content Generator is my contribution to the Rivers
 
 Riverside Books is being developed as a connected product ecosystem where each individual product is responsible for solving a specific business problem while sharing a consistent data foundation. My focus is building the marketing intelligence layer of the platform: turning book catalog information into useful, engaging, and scalable marketing assets.
 
-The goal of this product is not simply to generate text. The goal is to create a reliable system that understands structured product information and converts it into content that helps customers discover books.
+The goal of this product is not simply to generate text. The goal is to create a reliable system that understands structured product information and reader context, then converts those signals into content that helps customers discover books and keep reading.
 
 ---
 
@@ -33,7 +33,7 @@ This product owns the workflow of:
 3. Generating customer-facing marketing content.
 4. Producing reusable marketing outputs.
 
-The product is designed to support future workflows such as promotional campaigns, personalized recommendations, and automated customer engagement.
+The product now includes a tightly scoped reader-engagement MVP for personalized recommendations and automated customer engagement.
 
 ---
 
@@ -91,6 +91,24 @@ Short-form promotional messaging designed for customer engagement.
 ## Email Campaign Copy
 
 Marketing communication that can be adapted for newsletters and promotional campaigns.
+
+## Reader Engagement MVP
+
+Alongside the original catalog-only workflow, callers may provide optional
+reader context: `reader_id`, `favorite_genres`, `books_read`,
+`active_challenge`, `challenge_progress`, `last_visit`, and optional community
+progress fields. The decision layer selects one structured message type:
+
+- `challenge_completion_nudge` when a reader is close to completing an active challenge.
+- `comeback_challenge` when the last visit is at least 30 days ago.
+- `community_progress` when a shared goal percentage is supplied.
+- `genre_exploration_quest` when recorded reads stay within favorite genres and an unread outside-genre title is available.
+- `personalized_discovery` as the relevant discovery fallback.
+
+Every engagement result includes its audience, recommended book, reason for
+selection, headline, body copy, and call to action. This first slice is
+deterministic and reviewable; delivery, identity resolution, and campaign
+analytics remain out of scope.
 
 ---
 

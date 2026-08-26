@@ -1,6 +1,6 @@
 # Riverside Books Marketing Generator web MVP
 
-This React + Vite interface sends catalog JSON to the existing FastAPI `POST /generate` endpoint and displays generated drafts, rejected records, and validation diagnostics.
+This React + Vite interface sends catalog JSON and optional reader-context JSON to the FastAPI `POST /generate` endpoint. It displays the selected reader-engagement message, legacy generated drafts, rejected records, and validation diagnostics.
 
 ## Run locally
 
@@ -13,6 +13,9 @@ npm run dev
 ```
 
 `.env.example` points to the verified Render API. Override `VITE_API_BASE_URL` in `.env.local` when using another backend.
+
+Load the sample catalog to see the engagement MVP. Clear the optional reader
+context field to use the original catalog-only request shape.
 
 Start the backend from the project root with:
 
